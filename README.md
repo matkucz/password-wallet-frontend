@@ -1,4 +1,6 @@
-# Getting Started with Create React App
+# Python password wallet - frontend
+
+## Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
@@ -68,3 +70,8 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+### Run in docker container
+
+First, you need to build image using `docker build -f Dockerfile.dev -t <your_image_name> .`.
+Then, run container using command `docker run -it --name <your_name> -p 3000:3000 -v /app/node_modules -v $(pwd):/app <your_image_name>`.
