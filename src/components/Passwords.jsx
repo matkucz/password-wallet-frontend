@@ -1,228 +1,372 @@
-import { useEffect, useState } from "react";
+import { Component } from "react";
+import { getPasswords, addPassword, checkMasterPassword, encryptPassword, sharePassword } from "../api/api";
 import Modal from "./Modal";
 
-function Passwords (props) {
-  const [ id, setId ] = useState(0);
-  const [ shareId, setShareId ] = useState(0);
-  const [ modalType, setModalType ] = useState("");
-  const [ modalData, setModalData ] = useState({});
-  const [title, setTitle] = useState("New password");
-  const [ passwords, setPasswords ] = useState([
-      {
-        id: 1,
-        login: "jażąbek",
-        password: "fajny",
-        web_address: "siema@siema.pl",
-        description: "ąąąęęęśśśśś",
-        encrypted: false,
-        isOwner: false,
-      },
-      {
-        id: 2,
-        login: "trąbek",
-        password: "normalny",
-        web_address: "eniu@siema.pl",
-        description: "ąąąęęęśśśśś",
-        encrypted: false,
-        isOwner: true,
-      },
-      {
-        id: 3,
-        login: "bąbek",
-        password: "dziwny",
-        web_address: "człeniu@siema.pl",
-        description: "ąąąęęęśśśśś",
-        encrypted: false,
-        isOwner: true,
-      }      
-  ]);
-
-  const sendEditData = () => {
-    // console.log("edycja: ", login, password, webAddress, description);
+class Passwords extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      id: 0,
+      shareId: 0,
+      modalType: "",
+      modalData: {},
+      title: "",
+      passwords: [],
+      masterPasswordChecked: false,
+    };
   }
 
-  const sendData = () => {
-    // console.log("dodanie: ", login, password, webAddress, description);
-  }
-
-  const showPassword = (password) => {
-    const index = passwords.indexOf(password);
-    const newPasswords = passwords;
-    newPasswords[index].encrypted = true;
-    setPasswords([...newPasswords]);
-  }
-
-  // modal useEffect only when modal type or id changes
-  useEffect(() => {
-      // update the modal's content.
-      if (modalType === "edit") {
-        setTitle('Edit password');
-        let password = passwords.find((element) => element.id === id);
-        setModalData({
-          login: password.login,
-          password: password.password,
-          webAddress: password.web_address,
-          description: password.description
-        });
+  getUserPasswords = () => {
+    getPasswords().then(([data, errors]) => {
+      if (errors) {
+        console.error(data);
       } else {
-        setTitle('New password');
-        setModalData({
-          login: "",
-          password: "",
-          webAddress: "",
-          description: ""
-        });
+        this.setState({ passwords: data.data });
       }
-  }, [modalType, id]);
+    });
+    // let errors = false;
+    // getPasswords().then((res) => {
+    //   if (res.status !== 200) {
+    //     errors = true;
+    //   }
+    //   return res.json();
+    // }).then((data) => {
+    //   if (!errors) {
+    //     this.setState({ passwords: data.data });
+    //   } else {
+    //     if (data.msg === "Token has expired") {
+    //       this.props.logout();
+    //     }
+    //   }
+    // }).catch((err) => {
+    //   console.log(err);
+    // });
+  }
 
-  return (    
-      <main>
-        <div className="d-flex justify-content-end p-2">
-          <button 
-            type="button"
-            className="btn btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#passwordModal"
-            onClick={ () => setModalType("add") }
-          >
-            Add
-          </button>
-        </div>
-        <div>
-        <table className="table">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Login</th>
-                    <th scope="col">Password</th>
-                    <th scope="col">Web address</th>
-                    <th scope="col">Description</th>
-                    <th scope="col"></th>
-                </tr>
-            </thead>
-            <tbody>
-            {
-                passwords.map((element) => {
-                    return (
-                        <tr key={element.id}>
-                            <th scope="row">{element.id}</th>
-                            <td>{element.login}</td>
-                            {
-                              element.encrypted ? <td>{element.password}</td> : <td>********</td>
-                            }                            
-                            <td>{element.web_address}</td>
-                            <td>{element.description}</td>
-                            <td className='d-flex justify-content-end'>
-                              <button 
-                                type="button"
-                                className="btn btn-warning" 
-                                onClick={ () => {
-                                    showPassword(element);
-                                  }
-                                }
-                              >
-                                Display
-                              </button>
-                              {
-                                element.isOwner ?
-                                  <>
-                                  <button 
-                                    type="button"
-                                    className="btn btn-success ms-2" 
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#passwordModal"
-                                    onClick={ () => {
-                                        setModalType("edit");
-                                        setId(element.id);
-                                      }
-                                    }
-                                  >
-                                    Edit
-                                  </button>
-                                  <button 
-                                    type="button"
-                                    className="btn btn-danger ms-2"
-                                    onClick={ () => {
-                                        console.log(element.id)
-                                      }
-                                    }
-                                  >
-                                    Delete
-                                  </button>
-                                  <button 
-                                    type="button"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#shareModal"
-                                    className="btn btn-primary ms-2"
-                                    onClick={ () => {
-                                        setShareId(element.id)
-                                      }
-                                    }
-                                  >
-                                    Share
-                                  </button>
-                                </> : <></>
-                              }
-                            </td>
-                        </tr>
-                    )                    
-                })
-            }
-            </tbody>
-        </table>
-        </div>
-        <Modal
-          name="passwordModal"
-          title={ title }
-          modalType={ modalType }
-          onSubmit={(data)=> console.log(data)}
-          fields={
-            [
-              {
-                type: "text",
-                name: "login",
-                label: "Login:",
-                value: modalData.login,
-              },
-              {
-                type: "password",
-                name: "password",
-                label: "Password:",
-                value: modalData.password,
-              },
-              {
-                type: "text",
-                name: "webAddress",
-                label: "Web address:",
-                value: modalData.webAddress,
-              },
-              {
-                type: "text",
-                name: "description",
-                label: "Description:",
-                value: modalData.description,
-              },
-            ]
-        }
-        />
-        <Modal
-          name="shareModal"
-          title="Share with other user"
-          modalType="add"
-          onSubmit={(data)=> console.log(data, shareId)}
-          fields={
-            [
-              {
-                type: "text",
-                name: "login",
-                label: "User login:",
-                value: "",
+  componentDidMount = () => {
+    this.getUserPasswords();
+  }
+
+  // componentDidUpdate = (prevProps, prevState, snapshot) => {
+  //   console.log(prevState);
+  //   console.log(this.state)
+  // }
+
+  onPassModalSubmit = (data) => {
+    if (data.login !== "" && data.password !== "" && data.web_address !== "" && data.description !== "") {
+      if (this.state.modalType === "edit") {
+        this.sendEditData(data);
+      } else {
+        this.sendData(data);
+      }
+    }
+  }
+
+  sendEditData = (data) => {
+    console.log(data, this.state.id);
+  }
+
+  sendData = (data) => {
+    let errors = false;
+    addPassword(data).then((res) => {
+      if (res.status !== 200) {
+        errors = true;
+      }
+      return res.json();
+    }).then((data) => {
+      if (!errors) {
+        this.getUserPasswords();
+      } else {
+        console.log(data);
+      }
+    }).catch((err) => {
+      console.log(err);
+    })
+    // console.log("dodanie: ", login, password, web_address, description);
+  }
+
+  showPassword = (password) => {
+    let errors = false;
+    const index = this.state.passwords.indexOf(password);
+    const newPasswords = this.state.passwords;
+    encryptPassword(newPasswords[index].id).then((res) => {
+      if (res.status !== 200) {
+        errors = true;
+      }
+      return res.json();
+    }).then((data) => {
+      if (!errors) {
+        newPasswords[index].password = data.data;
+        newPasswords[index].encrypted = true;
+        this.setState({ passwords: [...newPasswords]});
+      } else {
+        console.log(data);
+      }
+    }).catch((err) => {
+      console.log(err);
+    })
+    
+
+    
+  }
+
+  sharePassword = (data) => {
+    data.id = this.state.shareId;
+    let errors = false;
+    sharePassword(data).then((res) => {
+      if (res.status !== 200) {
+        errors = true;
+      }
+      return res.json();
+    }).then((data) => {
+      if (!errors) {
+        // this.setState({ masterPasswordChecked: true });
+      } else {
+        console.log(data);
+      }
+    }).catch((err) => {
+      console.error(err);
+    })
+  }
+
+  checkMasterPassword = (data) => {
+    let errors = false;
+    checkMasterPassword(data).then((res) => {
+      if (res.status !== 200) {
+        errors = true;
+      }
+      return res.json();
+    }).then((data) => {
+      if (!errors) {
+        this.setState({ masterPasswordChecked: true });
+      } else {
+        console.log(data);
+      }
+    }).catch((err) => {
+      console.log(err);
+    })
+  }
+  
+  // modal useEffect only when modal type or id changes
+  // useEffect(() => {
+  //     // update the modal's content.
+  //     if (modalType === "edit") {
+  //       setTitle('Edit password');
+  //       let password = passwords.find((element) => element.id === id);
+  //       setModalData({
+  //         login: password.login,
+  //         password: password.password,
+  //         web_address: password.web_address,
+  //         description: password.description
+  //       });
+  //     } else {
+  //       setTitle('New password');
+  //       setModalData({
+  //         login: "",
+  //         password: "",
+  //         web_address: "",
+  //         description: ""
+  //       });
+  //     }
+  // }, [modalType, id]);
+  render () {
+    return (    
+        <main>
+          <div className="d-flex justify-content-end p-2">
+            <button 
+              type="button"
+              className="btn btn-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#passwordModal"
+              onClick={ () => this.setState({ 
+                  modalType: 'add',
+                  title: 'New password',
+                  modalData: {
+                    login: '',
+                    password: '',
+                    web_address: '',
+                    description: ''
+                  }
+                }) 
               }
-            ]
-        }
-        />
-      </main>
-  );
+            >
+              Add
+            </button>
+          </div>
+          <div>
+          <table className="table">
+              <thead>
+                  <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">Login</th>
+                      <th scope="col">Password</th>
+                      <th scope="col">Web address</th>
+                      <th scope="col">Description</th>
+                      <th scope="col"></th>
+                  </tr>
+              </thead>
+              <tbody>
+              {
+                  this.state.passwords.map((element) => {
+                      return (
+                          <tr key={element.id}>
+                              <th scope="row">{element.id}</th>
+                              <td>{element.login}</td>
+                              {
+                                element.encrypted ? <td>{element.password}</td> : <td>********</td>
+                              }                            
+                              <td>{element.web_address}</td>
+                              <td>{element.description}</td>
+                              <td className='d-flex justify-content-end'>
+                                {
+                                  !this.state.masterPasswordChecked ? (
+                                    <button 
+                                      type="button"
+                                      data-bs-target="#masterModal"
+                                      data-bs-toggle="modal"
+                                      className="btn btn-warning"
+                                    >
+                                      Display
+                                    </button>
+                                  ) : (
+                                    <button 
+                                      type="button"
+                                      className="btn btn-warning"
+                                      onClick={ () => {
+                                          this.showPassword(element);
+                                        }
+                                      }
+                                    >
+                                      Display
+                                    </button>
+                                  )
+                                }
+                                {
+                                  element.is_owner ?
+                                    <>
+                                    <button 
+                                      type="button"
+                                      className="btn btn-success ms-2" 
+                                      data-bs-toggle="modal"
+                                      data-bs-target="#passwordModal"
+                                      onClick={ () => {
+                                        // let password = passwords.find((element) => element.id === id);
+                                          this.setState({ 
+                                            modalType: "edit",
+                                            id: element.id,
+                                            title: 'Edit password',
+                                            modalData: {
+                                              login: element.login,
+                                              password: "",
+                                              web_address: element.web_address,
+                                              description: element.description
+                                          }, });
+                                        }
+                                      }
+                                    >
+                                      Edit
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      className="btn btn-danger ms-2"
+                                      onClick={ () => {
+                                          console.log(element.id)
+                                        }
+                                      }
+                                    >
+                                      Delete
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      data-bs-toggle="modal"
+                                      data-bs-target="#shareModal"
+                                      className="btn btn-primary ms-2"
+                                      onClick={ () => {
+                                          this.setState({ shareId :element.id });
+                                        }
+                                      }
+                                    >
+                                      Share
+                                    </button>
+                                  </> : <></>
+                                }
+                              </td>
+                          </tr>
+                      )                    
+                  })
+              }
+              </tbody>
+          </table>
+          </div>
+          <Modal
+            name="passwordModal"
+            title={ this.state.title }
+            modalType={ this.state.modalType }
+            onSubmit={(data)=> this.onPassModalSubmit(data)}
+            fields={
+              [
+                {
+                  type: "text",
+                  name: "login",
+                  label: "Login:",
+                  value: this.state.modalData.login,
+                },
+                {
+                  type: "password",
+                  name: "password",
+                  label: "Password:",
+                  value: this.state.modalData.password,
+                },
+                {
+                  type: "text",
+                  name: "web_address",
+                  label: "Web address:",
+                  value: this.state.modalData.web_address,
+                },
+                {
+                  type: "text",
+                  name: "description",
+                  label: "Description:",
+                  value: this.state.modalData.description,
+                },
+              ]
+          }
+          />
+          <Modal
+            name="masterModal"
+            title="Insert master password"
+            modalType="add"
+            onSubmit={(data)=> this.checkMasterPassword(data)}
+            fields={
+              [
+                {
+                  type: "password",
+                  name: "password",
+                  label: "Master password:",
+                  value: "",
+                }
+              ]
+          }
+          />
+          <Modal
+            name="shareModal"
+            title="Share with other user"
+            modalType="add"
+            onSubmit={(data)=> this.sharePassword(data)}
+            fields={
+              [
+                {
+                  type: "text",
+                  name: "login",
+                  label: "User login:",
+                  value: "",
+                }
+              ]
+          }
+          />
+        </main>
+    );
+  }
 }
 
 export default Passwords;

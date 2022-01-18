@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { signup } from "../api/auth";
 
 function Signup (props) {
     const [login, setLogin] = useState("");
@@ -26,7 +27,27 @@ function Signup (props) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("signup: ", login, password, isHash);
+        let err = false;
+        signup(login, password, isHash)
+            .then((resp) => {
+                if (resp.status !== 200) {
+                    err = true;
+                }
+                return resp.json();
+            }).then((data) => {
+                console.log(data)
+                if (err) {
+                    if (data.message) {
+                        if (typeof data.message === "string" || data.message instanceof String) {
+                            // setErrors(data);
+                        } else {
+                            // setErrors(data.message);
+                        }
+                    }
+                }
+            }).catch((error) => {
+                console.log(error)                
+            });
     }
 
     return (
@@ -58,16 +79,6 @@ function Signup (props) {
                 <div className="mb-3">                    
                     Already have an account? <a className="link" href="/login">Sign in</a>  
                 </div>
-                {/* <div class="field">
-                <div class="control">
-                <label class="radio">
-                    <input type="radio" name="is_hash" value="true">
-                    SHA512
-                </label>
-                <label class="radio">
-                    <input type="radio" name="is_hash" value="false">
-                    HMAC
-                </label> */}
                 <div className="mb-3">
                     <button className="btn btn-primary" onClick={ (e) => handleSubmit(e) }>Sign up</button>
                 </div>
