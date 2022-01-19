@@ -4,7 +4,9 @@ import { signup } from "../api/auth";
 function Signup (props) {
     const [login, setLogin] = useState("");
     const [password, setPassword] = useState("");
-    const [isHash, setIsHash] = useState(false);
+    const [isHash, setIsHash] = useState(null);
+    const [errors, setErrors] = useState({});
+    const [loginSuccess, setLoginSuccess] = useState(false);
 
     const handleInput = (event) => {
         switch (event.target.id) {
@@ -27,41 +29,75 @@ function Signup (props) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        let err = false;
-        signup(login, password, isHash)
-            .then((resp) => {
-                if (resp.status !== 200) {
-                    err = true;
+        signup(login, password, isHash).then(([data, errors]) => {
+            if (errors) {
+                console.error(data);
+                if (typeof data.message === "string") {
+                    setErrors(data);
+                } else {
+                    setErrors(data.message);
                 }
-                return resp.json();
-            }).then((data) => {
-                console.log(data)
-                if (err) {
-                    if (data.message) {
-                        if (typeof data.message === "string" || data.message instanceof String) {
-                            // setErrors(data);
-                        } else {
-                            // setErrors(data.message);
-                        }
-                    }
-                }
-            }).catch((error) => {
-                console.log(error)                
-            });
+                setLoginSuccess(false);
+            } else {
+                setErrors({});
+                setLoginSuccess(true);
+                setLogin("");
+                setPassword("");
+                setIsHash(null);
+            }
+        });
     }
 
     return (
         <main className="d-flex justify-content-center">
             <div className="col-md-6">
             <form>
+                {
+                    errors.message && (
+                        <div className="alert alert-danger" role="alert">
+                            {  
+                                errors.message
+                            }
+                        </div>
+                    )
+                }
+                {                        
+                    loginSuccess && (
+                        <div className="alert alert-success" role="alert">
+                            Account created.
+                        </div>
+                    )
+                }
                 <div className="mb-3">
                     <label htmlFor="login" className="col-form-label">Login:</label>
                     <input type="text" className="form-control" id="login" value={ login } onChange={ handleInput }/>
                 </div>
+                {
+                    errors.login && (                    
+                        <div className="alert alert-danger" role="alert">
+                            {  
+                                errors.login.map((err) => {
+                                    return err;
+                                })
+                            }
+                        </div>
+                    )
+                }
                 <div className="mb-3">
                     <label htmlFor="password" className="col-form-label">Password:</label>
                     <input type="password" className="form-control" id="password" value={ password } onChange={ handleInput }></input>
                 </div>
+                {
+                    errors.password && (
+                        <div className="alert alert-danger" role="alert">
+                            {  
+                                errors.password.map((err) => {
+                                    return err;
+                                })
+                            }
+                        </div>
+                    )
+                }
                 <div className="mb-3">
                     <div className="form-check">
                         <input className="form-check-input" type="radio" name="isHash" id="sha512" onChange={ handleInput }/>
@@ -76,6 +112,17 @@ function Signup (props) {
                         </label>
                     </div>
                 </div>
+                {
+                    errors.is_hash && (
+                        <div className="alert alert-danger" role="alert">
+                            {  
+                                errors.is_hash.map((err) => {
+                                    return err;
+                                })
+                            }
+                        </div>
+                    )
+                }
                 <div className="mb-3">                    
                     Already have an account? <a className="link" href="/login">Sign in</a>  
                 </div>

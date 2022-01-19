@@ -1,4 +1,4 @@
-import { useEffect, useState, Component } from "react";
+import { Component } from "react";
 
 class Fields extends Component {
     constructor (props) {
@@ -46,30 +46,37 @@ class Fields extends Component {
     render () {
         return (
             <div>
-                <div className="modal-body">
-                    <form>
-                    {    
-                        this.state.fields.map((field, index) => {
-                            return (
-                                <div className="mb-3" key={ index }>
-                                    <label htmlFor={ field.name } className="col-form-label">{ field.label }</label>
-                                    <input type={ field.type } className="form-control" id={ field.name }  value={ this.state.fieldsValues[field.name] || "" } onChange={ this.handleInput }/>
-                                </div>
-                            )
-                        })
-                    }
-                    </form>
-                </div>
+                { this.state.modalType !== "display" && (
+                    <div className="modal-body">
+                        <form>
+                        {    
+                            this.state.fields.map((field, index) => {
+                                return (
+                                    <div className="mb-3" key={ index }>
+                                        <label htmlFor={ field.name } className="col-form-label">{ field.label }</label>
+                                        <input type={ field.type } className="form-control" id={ field.name }  value={ this.state.fieldsValues[field.name] || "" } onChange={ this.handleInput }/>
+                                    </div>
+                                )
+                            })
+                        }
+                        </form>
+                    </div>
+                )
+                }
                 <div className="modal-footer">
                     <button type="button" className="btn btn-danger" data-bs-dismiss="modal">Close</button>
-                    <button 
-                        type="button"
-                        className={ `btn btn-${this.state.modalType === "edit" ? "success" : "primary"}` }
-                        data-bs-dismiss="modal"
-                        onClick={ this.submit }
-                    >
-                    { this.state.modalType === "edit" ? "Edit" : "Add" }
-                    </button>
+                    {
+                        this.state.modalType !== "display" && ( 
+                        <button 
+                            type="button"
+                            className={ `btn btn-${this.state.modalType === "edit" ? "success" : "primary"}` }
+                            data-bs-dismiss="modal"
+                            onClick={ this.submit }
+                        >
+                        { this.state.modalType === "edit" ? "Edit" : "Add" }
+                        </button>
+                        )
+                    }
                 </div>
             </div>
         );

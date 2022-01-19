@@ -6,7 +6,6 @@ function Login (props) {
     const [login, setLogin] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
-    const [loginSuccess, setLoginSuccess] = useState(false);
     let navigate = useNavigate();
 
     const handleInput = (event) => {
@@ -24,25 +23,18 @@ function Login (props) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        loginAuth(login, password).then((data) => {
-            if (data.message) {
-                if (typeof data.message === "string" || data.message instanceof String) {
+        loginAuth(login, password).then(([data, errors]) => {
+            if (errors) {
+                console.error(data);
+                if (typeof data.message === "string") {
                     setErrors(data);
-                    setLoginSuccess(false);
                 } else {
                     setErrors(data.message);
-                    setLoginSuccess(false);
-                }
-            } else if (data.access_token) {
-                setErrors({});
-                setLogin("");
-                setPassword("");
-                setLoginSuccess(true);
+                }                
+            } else {
                 props.onLogin(data.access_token);
                 navigate("/");
             }
-        }).catch((error) => {
-            console.log(error)
         });
     }
     return (
@@ -55,13 +47,6 @@ function Login (props) {
                                 {  
                                     errors.message
                                 }
-                            </div>
-                        )
-                    }
-                    {                        
-                        loginSuccess && (
-                            <div className="alert alert-success" role="alert">
-                                Successful logged in.
                             </div>
                         )
                     }
